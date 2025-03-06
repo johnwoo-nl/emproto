@@ -3,7 +3,7 @@ import {
     type OffLineChargeAction,
     OffLineChargeActions,
     type OffLineChargeStatus
-} from "util/types.js";
+} from "../../util/types.js";
 
 abstract class SetAndGetOffLineChargeAbstract extends Datagram {
     private status: OffLineChargeStatus;

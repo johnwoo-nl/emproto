@@ -1,6 +1,6 @@
 import Datagram from "../Datagram.js";
-import { SetAndGetNickNameAction, SetAndGetNickNameActions } from "util/types.js";
-import { readString } from "util/util.js";
+import { SetAndGetNickNameAction, SetAndGetNickNameActions } from "../../util/types.js";
+import { readString } from "../../util/util.js";
 
 abstract class SetAndGetNickNameAbstract extends Datagram {
     private action: SetAndGetNickNameAction = SetAndGetNickNameActions.GET;    // u8

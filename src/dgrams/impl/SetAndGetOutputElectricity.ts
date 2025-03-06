@@ -2,7 +2,7 @@ import Datagram from "../Datagram.js";
 import {
     type SetAndGetOutputElectricityAction,
     SetAndGetOutputElectricityActions
-} from "util/types.js";
+} from "../../util/types.js";
 
 abstract class SetAndGetOutputElectricityAbstract extends Datagram {
     private action: SetAndGetOutputElectricityAction;    // u8

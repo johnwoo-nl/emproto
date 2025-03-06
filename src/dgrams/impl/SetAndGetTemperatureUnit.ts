@@ -5,7 +5,7 @@ import {
     SetAndGetTemperatureUnitActions,
     type TemperatureUnit,
     TemperatureUnits
-} from "util/types.js";
+} from "../../util/types.js";
 
 abstract class SetAndGetTemperatureUnitAbstract extends Datagram {
     private action: SetAndGetTemperatureUnitAction;

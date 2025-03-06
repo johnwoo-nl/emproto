@@ -1,7 +1,7 @@
 import Datagram from "../Datagram.js";
 import { Buffer } from "node:buffer";
-import { emTimestampToDate } from "util/util.js";
-import { type EmEvseCurrentState, EmEvseCurrentStates } from "util/types.js";
+import { emTimestampToDate } from "../../util/util.js";
+import { type EmEvseCurrentState, EmEvseCurrentStates } from "../../util/types.js";
 
 export abstract class SingleACChargingStatus extends Datagram {
 

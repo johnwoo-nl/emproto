@@ -1,7 +1,7 @@
 import Datagram from "../Datagram.js";
-import { type SystemTimeAction, SystemTimeActions } from "util/types.js";
+import { type SystemTimeAction, SystemTimeActions } from "../../util/types.js";
 import { Buffer } from "node:buffer";
-import { dateToEmTimestamp, emTimestampToDate } from "util/util.js";
+import { dateToEmTimestamp, emTimestampToDate } from "../../util/util.js";
 
 
 abstract class SystemTimeAbstract extends Datagram {

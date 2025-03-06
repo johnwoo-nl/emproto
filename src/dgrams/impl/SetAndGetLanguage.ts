@@ -4,7 +4,7 @@ import {
     Languages,
     type SetAndGetLanguageAction,
     SetAndGetLanguageActions
-} from "util/types.js";
+} from "../../util/types.js";
 
 abstract class SetAndGetLanguageAbstract extends Datagram {
 
