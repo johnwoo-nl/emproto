@@ -1,7 +1,7 @@
 import Datagram from "../Datagram.js";
-import { SystemTimeAction } from "../../util/types.js";
-import {Buffer} from "node:buffer";
-import {dateToEmTimestamp, emTimestampToDate} from "../../util/util.js";
+import { type SystemTimeAction, SystemTimeActions } from "util/types.js";
+import { Buffer } from "node:buffer";
+import { dateToEmTimestamp, emTimestampToDate } from "util/util.js";
 
 
 abstract class SystemTimeAbstract extends Datagram {
@@ -9,19 +9,19 @@ abstract class SystemTimeAbstract extends Datagram {
     private time: Date;
 
     unpackPayload(buffer: Buffer) {
-        this.action = SystemTimeAction[String(buffer.readUInt8(0))] || SystemTimeAction.UNKNOWN;
+        this.action = buffer.readUInt8(0) as SystemTimeAction;
         this.time = emTimestampToDate(buffer.readUInt32BE(1));
     }
 
     packPayload(): Buffer {
-        if (![SystemTimeAction.GET, SystemTimeAction.SET].includes(this.action)) {
+        if (!([SystemTimeActions.GET, SystemTimeActions.SET] as number[]).includes(this.action)) {
             throw new Error(`Invalid GetAndSetSystemTimeAction: ${this.action}`);
         }
 
         const buffer = Buffer.alloc(5);
         buffer.writeUInt8(this.action, 0);
 
-        if (this.action === SystemTimeAction.SET) {
+        if (this.action === SystemTimeActions.SET) {
             if (!this.time || this.time.getTime() === 0) {
                 this.time = new Date();
             }

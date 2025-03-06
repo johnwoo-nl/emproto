@@ -1,23 +1,27 @@
 import Datagram from "../Datagram.js";
 import { Buffer } from "node:buffer";
-import { SetAndGetTemperatureUnitAction, type TemperatureUnit, TemperatureUnitMapping } from "../../util/types.js";
-import { enumStr } from "../../util/util.js";
+import {
+    type SetAndGetTemperatureUnitAction,
+    SetAndGetTemperatureUnitActions,
+    type TemperatureUnit,
+    TemperatureUnits
+} from "util/types.js";
 
 abstract class SetAndGetTemperatureUnitAbstract extends Datagram {
     private action: SetAndGetTemperatureUnitAction;
-    private temperatureUnit: TemperatureUnitMapping;
+    private temperatureUnit: TemperatureUnit;
 
     unpackPayload(buffer: Buffer) {
-        this.action = SetAndGetTemperatureUnitAction[String(buffer.readUInt8(0))] || SetAndGetTemperatureUnitAction.UNKNOWN;
-        this.temperatureUnit = TemperatureUnitMapping[String(buffer.readUInt8(1))] || TemperatureUnitMapping.UNKNOWN;
+        this.action = buffer.readUInt8(0) as SetAndGetTemperatureUnitAction;
+        this.temperatureUnit = buffer.readUInt8(1) as TemperatureUnit;
     }
 
     packPayload(): Buffer {
-        if (![SetAndGetTemperatureUnitAction.GET, SetAndGetTemperatureUnitAction.SET].includes(this.action)) {
+        if (!([SetAndGetTemperatureUnitActions.GET, SetAndGetTemperatureUnitActions.SET] as number[]).includes(this.action)) {
             throw new Error(`Invalid SetAndGetTemperatureUnitAction: ${this.action}`);
         }
 
-        return Buffer.of(this.action, this.action === SetAndGetTemperatureUnitAction.GET ? 0 : this.temperatureUnit);
+        return Buffer.of(this.action, this.action === SetAndGetTemperatureUnitActions.GET ? 0 : this.temperatureUnit);
     }
 
     public getAction(): SetAndGetTemperatureUnitAction {
@@ -30,11 +34,11 @@ abstract class SetAndGetTemperatureUnitAbstract extends Datagram {
     }
 
     public getTemperatureUnit(): TemperatureUnit {
-        return enumStr(this.temperatureUnit, TemperatureUnitMapping) as TemperatureUnit;
+        return this.temperatureUnit;
     }
 
     public setTemperatureUnit(temperatureUnit: TemperatureUnit): this {
-        this.temperatureUnit = TemperatureUnitMapping[temperatureUnit];
+        this.temperatureUnit = TemperatureUnits[temperatureUnit];
         return this;
     }
 }

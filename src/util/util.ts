@@ -94,7 +94,8 @@ export function readString(buffer: Buffer, start: number, end: number): string {
 export function toDate(dt: Date | number | string | undefined | null): Date {
     if (dt instanceof Date || typeof dt === 'string') {
         return new Date(dt);
-    } if (typeof dt === 'number') {
+    }
+    if (typeof dt === 'number') {
         return new Date(dt * 1000);
     }
     return undefined;
@@ -109,62 +110,15 @@ export function sleep(ms: number) {
 }
 
 /**
- * Check if two enum values are equal, where either value may be a number or a string representation of that enum type.
- * @param a The first value to compare.
- * @param b The second value to compare.
- * @param enumType The enum type to use for conversion.
- * @returns True if the values are equal, false otherwise.
+ * Generic enum type. Takes either a (const) enum as input type, or an "object as const" type.
  */
-export function enumEquals<E extends {[key: number]: string | number}>(a: keyof E | number, b: keyof E | number, enumType: E): boolean {
-    if (typeof a === typeof b) {
-        return a === b;
-    }
-
-    if (!enumType) {
-        throw new Error('enumType is required if enum values are not of the same type');
-    }
-
-    const aValue = typeof a === 'string' ? (isNaN(Number(a)) ? enumType[a as keyof E] : Number(a)) : a;
-    const bValue = typeof b === 'string' ? (isNaN(Number(b)) ? enumType[b as keyof E] : Number(b)) : b;
-
-    return aValue === bValue;
-}
-
-/**
- * Convert an enum value to a string representation.
- * @param value    Enum value to convert.
- * @param enumType Enum type to use for conversion.
- * @return String representation of the enum value, or undefined if the value is not a valid key or numeric value of the enum type.
- */
-export function enumStr<E extends {[key: number]: string | number}>(value: keyof E | number | undefined, enumType: E): string | undefined {
-    if (value === undefined) {
-        return undefined;
-    }
-    if (typeof value === 'string') {
-        if (!Object.keys(enumType).includes(value)) {
-            logWarning(`Invalid enum key ${value}`);
-            return undefined;
-        }
-        return value;
-    }
-    if (typeof value === 'number') {
-        // Numeric enums get a reverse mapping from numeric value to string value.
-        const str = enumType[value];
-        if (typeof str !== 'string') {
-            logWarning(`Invalid enum value ${value}`);
-            return undefined;
-        }
-        return str;
-    }
-    logWarning(`Invalid enum value type ${typeof value} for type ${enumType}; expected string | number`);
-    return undefined;
-}
+export type Enum<E extends string | object> = E extends string ? `${E}` | E : E[keyof E];
 
 export function parseErrorState(errorState: number): EmEvseError[] {
     const errors: EmEvseError[] = [];
     for (let i = 0; i < 32; i++) {
         if (errorState & (1 << i)) {
-            errors.push(i);
+            errors.push(i as EmEvseError);
         }
     }
     return errors;

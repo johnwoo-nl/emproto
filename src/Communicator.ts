@@ -1,12 +1,12 @@
-import { createSocket, Socket, RemoteInfo } from "node:dgram";
+import {createSocket, RemoteInfo, Socket} from "node:dgram";
 import * as fs from "node:fs";
-import { Buffer } from "node:buffer";
-import { homedir } from "node:os";
-import { logError, logInfo, logWarning, dumpDebug } from "./util/util.js";
-import { parseDatagrams } from "./dgrams/index.js";
+import {Buffer} from "node:buffer";
+import {homedir} from "node:os";
+import {dumpDebug, logError, logInfo, logWarning} from "./util/util.js";
+import {parseDatagrams} from "./dgrams/index.js";
 import {
-    EmCommunicator,
     DEFAULT_EM_COMMUNICATOR_CONFIG,
+    EmCommunicator,
     EmCommunicatorConfig,
     EmEvseEvent,
     EmEvseEventHandler,
@@ -14,9 +14,9 @@ import {
 } from "./util/types.js";
 import Evse from "./Evse.js";
 import Datagram from "./dgrams/Datagram.js";
-import { Heading, HeadingResponse } from "./dgrams/impl/Heading.js";
-import { Login } from "./dgrams/impl/Login.js";
-import { SingleACStatus, SingleACStatusResponse } from "./dgrams/impl/SingleACStatus.js";
+import {Heading, HeadingResponse} from "./dgrams/impl/Heading.js";
+import {Login} from "./dgrams/impl/Login.js";
+import {SingleACStatus, SingleACStatusResponse} from "./dgrams/impl/SingleACStatus.js";
 
 type EmEvseEventListener = {
     types: EmEvseEvent[];
@@ -73,7 +73,7 @@ export class Communicator implements EmCommunicator {
                         }
 
                         const evse = this.updateEvse(datagram, rinfo);
-                        this.dispatchEvent("datagram", evse, datagram);
+                        this.dispatchEvent(EmEvseEvents.DATAGRAM, evse, datagram);
 
                         if (datagram instanceof Login) {
                             // If we are not logged in now (evse's lastHeadingResponse is too long ago), and we have
@@ -159,12 +159,12 @@ export class Communicator implements EmCommunicator {
             const existing = this.getEvse(evse.getInfo().serial);
             if (existing) {
                 if (existing.merge(evse)) {
-                    this.dispatchEvent("changed", evse);
+                    this.dispatchEvent(EmEvseEvents.CHANGED, evse);
                 }
             } else {
                 this.evses.push(evse);
-                this.dispatchEvent("added", evse);
-                this.dispatchEvent("changed", evse);
+                this.dispatchEvent(EmEvseEvents.ADDED, evse);
+                this.dispatchEvent(EmEvseEvents.CHANGED, evse);
             }
         }
         if (loadedEvses.length > 0) {
@@ -252,18 +252,18 @@ export class Communicator implements EmCommunicator {
         return new Promise((resolve, reject) => {
             let listener: (evse: Evse, event: EmEvseEvent) => void;
             const timeout = setTimeout(() => {
-                this.removeEventListener("datagram", listener);
+                this.removeEventListener(EmEvseEvents.DATAGRAM, listener);
                 reject(new Error(`EVSE with serial ${serial ?? '(any)'} not online within ${timeoutSeconds} seconds`));
             }, timeoutSeconds * 1000);
             listener = (evse: Evse, event: EmEvseEvent) => {
-                if (serial && evse.getInfo().serial !== serial) return;
+                if ((serial && evse.getInfo().serial !== serial) || event === EmEvseEvents.REMOVED) return;
                 if (evse.isOnline()) {
                     clearTimeout(timeout);
-                    this.removeEventListener("datagram", listener);
+                    this.removeEventListener(EmEvseEvents.DATAGRAM, listener);
                     resolve(evse);
                 }
             };
-            this.addEventListener("datagram", listener);
+            this.addEventListener(EmEvseEvents.DATAGRAM, listener);
         });
     }
 
@@ -288,19 +288,19 @@ export class Communicator implements EmCommunicator {
             const ipUpdated = evse.updateIp(rInfo.address, rInfo.port);
             const evseUpdated = evse.update(datagram);
             if (ipUpdated || evseUpdated) {
-                this.dispatchEvent("changed", evse, datagram);
+                this.dispatchEvent(EmEvseEvents.CHANGED, evse, datagram);
             }
         } else {
             evse = new Evse(this, this.dispatchEvent.bind(this), { serial, ip: rInfo.address, port: rInfo.port });
             evse.update(datagram);
             this.evses.push(evse);
-            this.dispatchEvent("added", evse, datagram);
+            this.dispatchEvent(EmEvseEvents.ADDED, evse, datagram);
             // Some (most?) apps may not be interested in the difference between an EVSE being added and,
             // changed, and may just want to show the latest info for all EVSEs. So we send a changed
             // event as well when an EVSE is added, allowing such apps to only listen for that event.
             // Small downside is that apps that _do_ differentiate between added and changed will get
             // this spurious changed event.
-            this.dispatchEvent("changed", evse, datagram);
+            this.dispatchEvent(EmEvseEvents.CHANGED, evse, datagram);
         }
         return evse;
     }
@@ -362,7 +362,7 @@ export class Communicator implements EmCommunicator {
      *                will be removed.
      */
     public removeEventListener(types: EmEvseEvent|EmEvseEvent[], handler: EmEvseEventHandler | undefined): this {
-        if (typeof types === "string") types = [ types ];
+        if (!Array.isArray(types)) types = [ types ];
         if (!types || types.length === 0) types = Object.values(EmEvseEvents);
         this.listeners = this.listeners.filter(listener => {
             if (handler && listener.handler !== handler) return true;
@@ -391,7 +391,7 @@ export class Communicator implements EmCommunicator {
         if (!this.isRunning()) return;
         this.evses.forEach(evse => {
             if (evse.updateOnlineStatus()) {
-                this.dispatchEvent("changed", evse);
+                this.dispatchEvent(EmEvseEvents.CHANGED, evse);
             }
             if (!evse.isLoggedIn() && evse.hasPassword()) {
                 evse.login().then();

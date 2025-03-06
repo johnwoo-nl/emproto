@@ -1,9 +1,9 @@
 import Datagram from "../Datagram.js";
-import { SetAndGetNickNameAction } from "../../util/types.js";
-import { readString } from "../../util/util.js";
+import { SetAndGetNickNameAction, SetAndGetNickNameActions } from "util/types.js";
+import { readString } from "util/util.js";
 
-class SetAndGetNickNameAbstract extends Datagram {
-    private action: SetAndGetNickNameAction = SetAndGetNickNameAction.GET;    // u8
+abstract class SetAndGetNickNameAbstract extends Datagram {
+    private action: SetAndGetNickNameAction = SetAndGetNickNameActions.GET;    // u8
     private nickName: string; // 32 bytes
 
     public getAction(): SetAndGetNickNameAction {
@@ -25,17 +25,17 @@ class SetAndGetNickNameAbstract extends Datagram {
     }
 
     protected packPayload(): Buffer {
-        if (this.action !== SetAndGetNickNameAction.GET && this.action !== SetAndGetNickNameAction.SET) {
+        if (this.action !== SetAndGetNickNameActions.GET && this.action !== SetAndGetNickNameActions.SET) {
             throw new Error("Invalid action, must be GET or SET");
         }
 
-        if (this.action === SetAndGetNickNameAction.SET && !this.nickName) {
+        if (this.action === SetAndGetNickNameActions.SET && !this.nickName) {
             throw new Error("Nickname is required for SET action");
         }
 
         const buffer = Buffer.alloc(33);
         buffer.writeUInt8(this.action, 0);
-        if (this.action === SetAndGetNickNameAction.SET) {
+        if (this.action === SetAndGetNickNameActions.SET) {
             buffer.write(this.nickName, 1, 32, "binary");
         }
         return buffer;
@@ -46,7 +46,7 @@ class SetAndGetNickNameAbstract extends Datagram {
             throw new Error("Invalid payload; too short");
         }
 
-        this.action = SetAndGetNickNameAction[String(buffer.readUInt8(0))] || SetAndGetNickNameAction.UNKNOWN;
+        this.action = buffer.readUInt8(0) as SetAndGetNickNameAction;
         this.nickName = readString(buffer, 1, buffer.length >= 33 ? 33 : 17);
     }
 }

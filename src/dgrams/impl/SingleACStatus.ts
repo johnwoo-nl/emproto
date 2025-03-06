@@ -1,7 +1,7 @@
 import Datagram from "../Datagram.js";
 import { Buffer } from "node:buffer";
-import { EmEvseCurrentState, EmEvseError, EmEvseGunState, EmEvseOutputState } from "../../util/types.js";
-import { parseErrorState } from "../../util/util.js";
+import { EmEvseCurrentState, EmEvseError, EmEvseGunState, EmEvseOutputState } from "util/types.js";
+import { parseErrorState } from "util/util.js";
 
 export class SingleACStatus extends Datagram {
     public static readonly COMMAND = 4;
@@ -40,9 +40,9 @@ export class SingleACStatus extends Datagram {
         this.innerTemp = this.readTemperature(buffer, 13);
         this.outerTemp = this.readTemperature(buffer, 15);
         this.emergencyBtnState = buffer.readUInt8(17);
-        this.gunState = EmEvseGunState[String(buffer.readUInt8(18))] || EmEvseGunState.UNKNOWN_OTHER;
-        this.outputState = EmEvseOutputState[String(buffer.readUInt8(19))] || EmEvseOutputState.UNKNOWN_OTHER;
-        this.currentState = EmEvseCurrentState[String(buffer.readUInt8(20))] || EmEvseCurrentState.UNKNOWN;
+        this.gunState = buffer.readUInt8(18) as EmEvseGunState;
+        this.outputState = buffer.readUInt8(19) as EmEvseOutputState;
+        this.currentState = buffer.readUInt8(20) as EmEvseCurrentState;
         this.errors = parseErrorState(buffer.readUInt32BE(21));
         this.l2Voltage = buffer.length >= 33 ? buffer.readUInt16BE(25) * 0.1 : 0;
         this.l2Electricity = buffer.length >= 33 ? buffer.readUInt16BE(27) * 0.01 : 0;

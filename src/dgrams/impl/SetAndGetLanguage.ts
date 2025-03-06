@@ -1,12 +1,16 @@
 import Datagram from "../Datagram.js";
-import { type Language, LanguageMapping, SetAndGetLanguageAction } from "../../util/types.js";
-import { enumStr } from "../../util/util.js";
+import {
+    type Language,
+    Languages,
+    type SetAndGetLanguageAction,
+    SetAndGetLanguageActions
+} from "util/types.js";
 
 abstract class SetAndGetLanguageAbstract extends Datagram {
 
-    private action: SetAndGetLanguageAction = SetAndGetLanguageAction.GET;
+    private action: SetAndGetLanguageAction = SetAndGetLanguageActions.GET;
 
-    private language: LanguageMapping;
+    private language: Language;
 
     public getAction(): SetAndGetLanguageAction {
         return this.action;
@@ -18,16 +22,16 @@ abstract class SetAndGetLanguageAbstract extends Datagram {
     }
 
     public getLanguage(): Language {
-        return enumStr(this.language, LanguageMapping) as Language;
+        return this.language;
     }
 
     public setLanguage(language: Language): this {
-        this.language = LanguageMapping[language];
+        this.language = language;
         return this;
     }
 
     protected packPayload(): Buffer {
-        if (this.action === SetAndGetLanguageAction.SET && !this.language) {
+        if (this.action === SetAndGetLanguageActions.SET && !this.language) {
             throw new Error('Language is required when setting');
         }
 
@@ -35,8 +39,8 @@ abstract class SetAndGetLanguageAbstract extends Datagram {
     }
 
     protected unpackPayload(buffer: Buffer): void {
-        this.action = SetAndGetLanguageAction[String(buffer.readUInt8(0))] || SetAndGetLanguageAction.UNKNOWN;
-        this.language = LanguageMapping[String(buffer.readUInt8(1))] || LanguageMapping.UNKNOWN;
+        this.action = buffer.readUInt8(0) as SetAndGetLanguageAction;
+        this.language = buffer.readUInt8(1) as Language || Languages.UNKNOWN;
     }
 
 }

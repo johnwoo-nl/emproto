@@ -1,3 +1,7 @@
+// noinspection JSUnusedGlobalSymbols
+
+import { Enum } from "./util.js";
+
 export interface EmCommunicator {
     start(): Promise<number>;
     stop(): void;
@@ -79,6 +83,8 @@ export interface EmEvse {
     /**
      * Get the current state (at protocol level) of the EVSE. This is only available when the EVSE is online
      * and logged in; otherwise it will return undefined.
+     *
+     * @returns The current state, or undefined if the EVSE is not online or not logged in.
      */
     getState(): EmEvseState|undefined;
 
@@ -86,6 +92,8 @@ export interface EmEvse {
      * Get the current meta state of the EVSE. This is a computed normalized state based on various aspects
      * of the EVSE's online and login state and its operational state fields. Offered because most apps won't
      * need to know about the protocol-level details, but just want to show some UI.
+     *
+     * @returns The current meta state.
      */
     getMetaState(): EmEvseMetaState;
 
@@ -199,7 +207,7 @@ export interface EmEvse {
     toString(): string;
 }
 
-export enum Phases {
+export const enum Phases {
     SINGLE_PHASE = 1,
     THREE_PHASE = 3
 }
@@ -303,86 +311,99 @@ export interface EmDatagram {
     getCommand(): number;
 }
 
-export const EmEvseEvents = ["added", "changed", "removed", "datagram"] as const;
-export type EmEvseEvent = typeof EmEvseEvents[number];
+export enum EmEvseEvents {
+    ADDED = "ADDED",
+    CHANGED = "CHANGED",
+    REMOVED = "REMOVED",
+    DATAGRAM = "DATAGRAM"
+}
+export type EmEvseEvent = Enum<EmEvseEvents>;
 export type EmEvseEventHandler = (evse: EmEvse, event: EmEvseEvent, datagram?: EmDatagram) => void;
 
-export enum EmEvseGunState {
-    UNKNOWN_0 = 0,
-    DISCONNECTED = 1,   // Seen live when gun not plugged in.
-    CONNECTED_UNLOCKED = 2,  // Seen live when just plugged in but not charging yet (l1Electricity=0, outputState=IDLE, currentState=CHARGING).
-    UNKNOWN_3 = 3,  // Probably used when connected but not charging, or when plugging in and negotiating...
-    CONNECTED_LOCKED = 4,  // Seen live while charging and car locked.
-    UNKNOWN_5 = 5,
-    UNKNOWN_6 = 6,
-    UNKNOWN_7 = 7,
-    UNKNOWN_8 = 8,
-    UNKNOWN_OTHER = 254
-}
+export const EmEvseGunStates = {
+    UNKNOWN_0: 0,
+    DISCONNECTED: 1,   // Seen live when gun not plugged in.
+    CONNECTED_UNLOCKED: 2,  // Seen live when just plugged in but not charging yet (l1Electricity=0, outputState=IDLE, currentState=CHARGING).
+    UNKNOWN_3: 3,  // Probably used when connected but not charging, or when plugging in and negotiating...
+    CONNECTED_LOCKED: 4,  // Seen live while charging and car locked.
+    UNKNOWN_5: 5,
+    UNKNOWN_6: 6,
+    UNKNOWN_7: 7,
+    UNKNOWN_8: 8,
+    UNKNOWN_9: 9,
+    UNKNOWN_10: 10,
+    UNKNOWN_OTHER: 254
+} as const;
+export type EmEvseGunState = Enum<typeof EmEvseGunStates>;
 
-export enum EmEvseOutputState {
-    UNKNOWN_0 = 0,
-    CHARGING = 1,   // Seen live while charging (auto full charge, the default charge method).
-    IDLE = 2, // Seen live when not charging.
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN_6 = 6,
-    UNKNOWN_7 = 7,
-    UNKNOWN_8 = 8,
-    UNKNOWN_OTHER = 254
-}
+export const EmEvseOutputStates = {
+    UNKNOWN_0: 0,
+    CHARGING: 1,   // Seen live while charging (auto full charge, the default charge method).
+    IDLE: 2, // Seen live when not charging.
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN_6: 6,
+    UNKNOWN_7: 7,
+    UNKNOWN_8: 8,
+    UNKNOWN_9: 9,
+    UNKNOWN_10: 10,
+    UNKNOWN_OTHER: 254
+} as const;
+export type EmEvseOutputState = Enum<typeof EmEvseOutputStates>;
 
-export enum EmEvseCurrentState {
-    EVSE_FAULT = 1,
-    CHARGING_FAULT_2 = 2,
-    CHARGING_FAULT_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN_6 = 6,
-    UNKNOWN_7 = 7,
-    UNKNOWN_8 = 8,
-    UNKNOWN_9 = 9,
-    WAITING_FOR_SWIPE = 10,
-    WAITING_FOR_BUTTON = 11,
-    NOT_CONNECTED = 12,    // Seen live when not charging and gun not plugged in.
-    READY_TO_CHARGE = 13, // Seen live when plugged in but no charge started yet (l1Electricity=0, gunState=2/Connecting, outputState=IDLE)
-    CHARGING = 14,  // Seen live while charging (auto full charge, single-phase).
-    COMPLETED = 15,
-    UNKNOWN_16 = 16,
-    COMPLETED_FULL_CHARGE = 17,
-    UNKNOWN_18 = 18,
-    UNKNOWN_19 = 19,
-    CHARGING_RESERVATION = 20,
-    UNKNOWN_21 = 21,
-    UNKNOWN = 254
-}
+export const EmEvseCurrentStates = {
+    EVSE_FAULT: 1,
+    CHARGING_FAULT_2: 2,
+    CHARGING_FAULT_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN_6: 6,
+    UNKNOWN_7: 7,
+    UNKNOWN_8: 8,
+    UNKNOWN_9: 9,
+    WAITING_FOR_SWIPE: 10,
+    WAITING_FOR_BUTTON: 11,
+    NOT_CONNECTED: 12,    // Seen live when not charging and gun not plugged in.
+    READY_TO_CHARGE: 13, // Seen live when plugged in but no charge started yet (l1Electricity=0, gunState=2/Connecting, outputState=IDLE)
+    CHARGING: 14,  // Seen live while charging (auto full charge, single-phase).
+    COMPLETED: 15,
+    UNKNOWN_16: 16,
+    COMPLETED_FULL_CHARGE: 17,
+    UNKNOWN_18: 18,
+    UNKNOWN_19: 19,
+    CHARGING_RESERVATION: 20,
+    UNKNOWN_21: 21,
+    UNKNOWN: 254
+} as const;
+export type EmEvseCurrentState = Enum<typeof EmEvseCurrentStates>;
 
-export enum EmEvseError {
-    RELAY_STICK_ERROR_L1 = 0,
-    RELAY_STICK_ERROR_L2 = 1,
-    RELAY_STICK_ERROR_L3 = 2,
-    OFFLINE = 3,
-    CC_ERROR = 4,
-    CP_ERROR = 5,
-    EMERGENCY_STOP = 6,
-    OVER_TEMPERATURE_INNER = 7,
-    OVER_TEMPERATURE_OUTER = 8,
-    UNKNOWN_9 = 9,
-    LEAKAGE_PROTECTION = 10,
-    SHORT_CIRCUIT = 11,
-    OVER_CURRENT = 12,
-    UNGROUNDED = 13,
-    OVER_VOLTAGE = 14,
-    LOW_VOLTAGE = 15,
-    INPUT_POWER_ERROR = 25,
-    MAINS_OVERLOAD = 26,
-    DIODE_SHORT_CIRCUIT = 27,
-    RTC_FAILURE = 28,
-    FLASH_MEMORY_FAILURE = 29,
-    EEPROM_FAILURE = 30,
-    METERING_MODULE_FAILURE = 31,
-}
+export const EmEvseErrors = {
+    RELAY_STICK_ERROR_L1: 0,
+    RELAY_STICK_ERROR_L2: 1,
+    RELAY_STICK_ERROR_L3: 2,
+    OFFLINE: 3,
+    CC_ERROR: 4,
+    CP_ERROR: 5,
+    EMERGENCY_STOP: 6,
+    OVER_TEMPERATURE_INNER: 7,
+    OVER_TEMPERATURE_OUTER: 8,
+    UNKNOWN_9: 9,
+    LEAKAGE_PROTECTION: 10,
+    SHORT_CIRCUIT: 11,
+    OVER_CURRENT: 12,
+    UNGROUNDED: 13,
+    OVER_VOLTAGE: 14,
+    LOW_VOLTAGE: 15,
+    INPUT_POWER_ERROR: 25,
+    MAINS_OVERLOAD: 26,
+    DIODE_SHORT_CIRCUIT: 27,
+    RTC_FAILURE: 28,
+    FLASH_MEMORY_FAILURE: 29,
+    EEPROM_FAILURE: 30,
+    METERING_MODULE_FAILURE: 31
+} as const;
+export type EmEvseError = Enum<typeof EmEvseErrors>;
 
 export type EmEvseInfo = {
     ip: string;
@@ -441,34 +462,35 @@ export type EmEvseState = {
     errors: EmEvseError[];
 };
 
-export enum EmEvseMetaState {
+export enum EmEvseMetaStates {
     /**
      * EVSE is offline, i.e. no datagrams have been received from it recently.
      */
-    OFFLINE = 0,
+    OFFLINE = "OFFLINE",
     /**
      * EVSE is online but the library isn't logged in.
      */
-    NOT_LOGGED_IN = 1,
+    NOT_LOGGED_IN = "NOT_LOGGED_IN",
     /**
      * EVSE is online and logged in but not charging or connected. This state is also used when initializing,
      * when the library has just logged in but no state is determined yet.
      */
-    IDLE = 2,
+    IDLE = "IDLE",
     /**
      * EVSE is online and plugged in but not charging. If a charging session is planned, the meta state will be
      * PLUGGED_IN. In this state, a chargeStart call can be made to start or plan a charging session.
      */
-    PLUGGED_IN = 3,
+    PLUGGED_IN = "PLUGGED_IN",
     /**
      * EVSE is currently charging.
      */
-    CHARGING = 4,
+    CHARGING = "CHARGING",
     /**
      * EVSE is in an error state. The error(s) can be found in getState().errors.
      */
-    ERROR = 5
+    ERROR = "ERROR"
 }
+export type EmEvseMetaState = Enum<EmEvseMetaStates>;
 
 export type EmEvseCurrentCharge = {
     port: number;
@@ -534,123 +556,132 @@ export type EmEvseCurrentCharge = {
     chargeFee: number;
 };
 
-export enum OffLineChargeStatusMapping {
-    ENABLED = 0,
-    DISABLED = 1,
-    UNKNOWN_2 = 2, // Seen live when offline charge is disabled (app required to start charging session).
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN = 254
-}
-export type OffLineChargeStatus = keyof typeof OffLineChargeStatusMapping;
+export const OffLineChargeStatuses = {
+    ENABLED: 0,
+    DISABLED: 1,
+    UNKNOWN_2: 2, // Seen live when offline charge is disabled (app required to start charging session).
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN: 254
+} as const;
+export type OffLineChargeStatus = Enum<typeof OffLineChargeStatuses>;
 
-export enum OffLineChargeAction {
-    UNKNOWN_0 = 0,
-    SET = 1,     // Seen in an unsolicited SetAndGetOffLineChargeResponse(269) with a status of 2 when offline charging was disabled.
-    GET = 2,
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN = 254
-}
+export const OffLineChargeActions = {
+    UNKNOWN_0: 0,
+    SET: 1,     // Seen in an unsolicited SetAndGetOffLineChargeResponse(269) with a status of 2 when offline charging was disabled.
+    GET: 2,
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN: 254
+} as const;
+export type OffLineChargeAction = Enum<typeof OffLineChargeActions>;
 
-export enum SystemTimeAction {
-    GET = 0,    // Seen in an unsolicited SettingSystemTime when the evse is reporting its time. Since other calls have actions SET=1 and GET=2, perhaps this means REPORT=0 for unsolicited reports? Need to test an explicit GET.
-    SET = 1,
-    UNKNOWN_2 = 2,
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN = 254
-}
+export const SystemTimeActions = {
+    GET: 0,    // Seen in an unsolicited SettingSystemTime when the evse is reporting its time. Since other calls have actions SET=1 and GET=2, perhaps this means REPORT=0 for unsolicited reports? Need to test an explicit GET.
+    SET: 1,
+    UNKNOWN_2: 2,
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN: 254
+} as const;
+export type SystemTimeAction = Enum<typeof SystemTimeActions>;
 
-export enum SetAndGetOutputElectricityAction {
-    UNKNOWN_0 = 0,
-    SET = 1,    // Note: not yet seen.
-    GET = 2,    // Note: not yet seen.
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN = 254
-}
+export const SetAndGetOutputElectricityActions = {
+    UNKNOWN_0: 0,
+    SET: 1,    // Note: not yet seen.
+    GET: 2,    // Note: not yet seen.
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN: 254
+} as const;
+export type SetAndGetOutputElectricityAction = Enum<typeof SetAndGetOutputElectricityActions>;
 
-export enum SetAndGetNickNameAction {
-    SET = 1,
-    GET = 2,
-    UNKNOWN = 254
-}
+export const SetAndGetNickNameActions = {
+    SET: 1,
+    GET: 2,
+    UNKNOWN: 254
+} as const;
+export type SetAndGetNickNameAction = Enum<typeof SetAndGetNickNameActions>;
 
-export enum SetAndGetTemperatureUnitAction {
-    SET = 1,
-    GET = 2,
-    UNKNOWN = 254
-}
+export const SetAndGetTemperatureUnitActions = {
+    SET: 1,
+    GET: 2,
+    UNKNOWN: 254
+} as const;
+export type SetAndGetTemperatureUnitAction = Enum<typeof SetAndGetTemperatureUnitActions>;
 
-export enum TemperatureUnitMapping {
-    CELSIUS = 1,
-    FAHRENHEIT = 2,
-    UNKNOWN = 254,
-}
-export type TemperatureUnit = keyof typeof TemperatureUnitMapping;
+export const TemperatureUnits  = {
+    CELSIUS: 1,
+    FAHRENHEIT: 2,
+    UNKNOWN: 254,
+} as const;
+export type TemperatureUnit = Enum<typeof TemperatureUnits>;
 
-export enum GetAndSetSystemTimeAction {
-    SET = 1,
-    GET = 2,
-    UNKNOWN = 254
-}
+export const GetAndSetSystemTimeActions = {
+    SET: 1,
+    GET: 2,
+    UNKNOWN: 254
+} as const;
+export type GetAndSetSystemTimeAction = Enum<typeof GetAndSetSystemTimeActions>;
 
-export enum SetAndGetLanguageAction {
-    UNKNOWN_0 = 0,
-    SET = 1,
-    GET = 2,
-    UNKNOWN_3 = 3,
-    UNKNOWN_4 = 4,
-    UNKNOWN_5 = 5,
-    UNKNOWN = 254
-}
+export const SetAndGetLanguageActions = {
+    UNKNOWN_0: 0,
+    SET: 1,
+    GET: 2,
+    UNKNOWN_3: 3,
+    UNKNOWN_4: 4,
+    UNKNOWN_5: 5,
+    UNKNOWN: 254
+} as const;
+export type SetAndGetLanguageAction = Enum<typeof SetAndGetLanguageActions>;
 
-export enum LanguageMapping {
-    UNKNOWN_0 = 0,
-    ENGLISH = 1,
-    ITALIAN = 2,
-    GERMAN = 3,
-    FRENCH = 4,
-    SPANISH = 5,
-    HEBREW = 6,
-    UNKNOWN_7 = 7,
-    UNKNOWN_8 = 8,
-    UNKNOWN_9 = 9,
-    UNKNOWN_10 = 10,
-    UNKNOWN = 254
-}
-export type Language = keyof typeof LanguageMapping;
+export const Languages = {
+    UNKNOWN_0: 0,
+    ENGLISH: 1,
+    ITALIAN: 2,
+    GERMAN: 3,
+    FRENCH: 4,
+    SPANISH: 5,
+    HEBREW: 6,
+    UNKNOWN_7: 7,
+    UNKNOWN_8: 8,
+    UNKNOWN_9: 9,
+    UNKNOWN_10: 10,
+    UNKNOWN: 254
+} as const;
+export type Language = Enum<typeof Languages>;
 
 export type DispatchEvent = (event: EmEvseEvent, evse: EmEvse, datagram?: EmDatagram) => void;
 
-export enum ChargeStartErrorReason {
-    NO_ERROR = 0,
-    NOT_PLUGGED_IN = 1,
-    SYSTEM_ERROR = 2,
-    ALREADY_CHARGING = 3,
-    SYSTEM_MAINTENANCE = 4,
-    INCORRECT_FEE_SET = 5,
-    INCORRECT_POWER_SET = 6,
-    INCORRECT_TIME_SET = 7,
-    UNKNOWN_ERROR = 8,
-    RESERVATION_PENDING = 20
-}
+export const ChargeStartErrorReasons = {
+    NO_ERROR: 0,
+    NOT_PLUGGED_IN: 1,
+    SYSTEM_ERROR: 2,
+    ALREADY_CHARGING: 3,
+    SYSTEM_MAINTENANCE: 4,
+    INCORRECT_FEE_SET: 5,
+    INCORRECT_POWER_SET: 6,
+    INCORRECT_TIME_SET: 7,
+    UNKNOWN_ERROR: 8,
+    RESERVATION_PENDING: 20
+} as const;
+export type ChargeStartErrorReason = Enum<typeof ChargeStartErrorReasons>;
 
-export enum ChargeStartReservationResult {
-    IMMEDIATE_START = 0,            // No reservation planned; start charging immediately.
-    RESERVATION_OK = 1,             // Reservation made successfully.
-    RESERVATION_NOT_SUPPORTED = 2,  // This wallbox does not support reservations. `ChargeStartParams.startAt` cannot be used.
-    RESERVATION_TOO_DISTANT = 3,    // Reservation failed; the start time is too far in the future (more than 24h).
-    RESERVATION_IN_PAST = 4,        // Reservation failed; the start time is in the past. The wallbox has started charging immediately.
-    SYSTEM_ERROR = 5,               // Reservation failed; system error.
-    RESERVATION_EXISTS = 6,         // Reservation failed; there is already a reservation planned.
-    ALREADY_CHARGING = 7,           // Reservation failed; the wallbox is already charging.
-    INCORRECT_FEE_SET = 8,          // Reservation failed; an incorrect fee has been set.
-    INCORRECT_POWER_SET = 9,        // Reservation failed; an incorrect power level has been set.
-    INCORRECT_TIME_SET = 10,        // Reservation failed; an incorrect time has been set.
-}
+export const ChargeStartReservationResults = {
+    IMMEDIATE_START: 0,            // No reservation planned; start charging immediately.
+    RESERVATION_OK: 1,             // Reservation made successfully.
+    RESERVATION_NOT_SUPPORTED: 2,  // This wallbox does not support reservations. `ChargeStartParams.startAt` cannot be used.
+    RESERVATION_TOO_DISTANT: 3,    // Reservation failed; the start time is too far in the future (more than 24h).
+    RESERVATION_IN_PAST: 4,        // Reservation failed; the start time is in the past. The wallbox has started charging immediately.
+    SYSTEM_ERROR: 5,               // Reservation failed; system error.
+    RESERVATION_EXISTS: 6,         // Reservation failed; there is already a reservation planned.
+    ALREADY_CHARGING: 7,           // Reservation failed; the wallbox is already charging.
+    INCORRECT_FEE_SET: 8,          // Reservation failed; an incorrect fee has been set.
+    INCORRECT_POWER_SET: 9,        // Reservation failed; an incorrect power level has been set.
+    INCORRECT_TIME_SET: 10         // Reservation failed; an incorrect time has been set.
+} as const;
+export type ChargeStartReservationResult = Enum<typeof ChargeStartReservationResults>;

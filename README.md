@@ -2,8 +2,6 @@
 
 Typescript node library to communicate with chargers (aka [EVSEs](https://en.wikipedia.org/wiki/EVSE)) using the "EVSEMaster" app: Besen, Telestar, evseODM, Morec, Deltaco, ...
 
-This library also includes a small [CLI test runner](#cli-test-runner) which you may use to read info from and control EVSEs.
-
 The library was developed and tested using a Telestar EC311S. Since the other brands use the same app, it may work with them as well,
 although there seem to be some subtle differences in supported datagrams and their formats/lengths. Use at your own risk. If something
 doesn't work, please set `dumpDatagrams: true` in the createCommunicator `config` parameter in order to see what data is received;
@@ -48,7 +46,7 @@ const evsesFile = '~/evses.json';
     communicator.loadEvses(evsesFile);
     await communicator.start();
 
-    communicator.addEventListener(["added", "changed", "removed"], (evse, event) => {
+    communicator.addEventListener(["ADDED", "CHANGED", "REMOVED"], (evse, event) => {
         console.log(`${event} ${evse.toString()}`);
         console.log(`  State: ${JSON.stringify(evse.getState())}`);
         console.log(`  Charge: ${JSON.stringify(evse.getCurrentCharge())}`);
@@ -91,7 +89,7 @@ import { createCommunicator } from "emproto";
 const communicator = createCommunicator();  // communicator instanceof EmCommunicator
 
 // Listen for events.
-communicator.addEventListener(["added", "changed", "removed"], (evse, event) => {
+communicator.addEventListener(["ADDED", "CHANGED", "REMOVED"], (evse, event) => {
     // EVSE was added, changed or removed (event in second parameter).
     // Maybe your app wants to update its UI or perform some action now.
     // You could also register separate listeners for separate events. 
@@ -101,7 +99,7 @@ communicator.addEventListener(["added", "changed", "removed"], (evse, event) => 
 // communicator instance for the duration of its lifetime, you could skip this.
 // The listener must be the same Function instance that you passed to
 // addEventListener.
-communicator.removeEventListener("changed", listener);
+communicator.removeEventListener("CHANGED", listener);
 
 // If you wish to persist the EVSEs list, you can load it from a file (or array
 // previously obtained from getEvses). This is optional; you could also have the
@@ -116,7 +114,7 @@ communicator.loadEvses("~/evses.json");
 // setting up the UDP socket.
 await communicator.start();
 
-// Get a list of EVSEs currently in the communicator's list.
+// Get a list of EVSEs currently in the communicator's memory.
 communicator.getEvses().forEach(evse => {
     // Do something with the EVSE.
     // evse instanceof EmEvse
@@ -306,9 +304,9 @@ config data structure will also be updated and a `changed` event will be emitted
 
 ```typescript
 await evse.setName("My charger");
-await evse.setOffLineCharge("DISABLED");
-await evse.setTemperatureUnit("CELSIUS");
-await evse.setLanguage("ENGLISH");
+await evse.setOffLineCharge(OffLineChargeStatuses.DISABLED);
+await evse.setTemperatureUnit(TemperatureUnits.CELSIUS);
+await evse.setLanguage(Languages.ENGLISH);
 ```
 
 #### Starting a charging session

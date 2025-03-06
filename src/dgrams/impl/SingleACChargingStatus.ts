@@ -1,7 +1,7 @@
 import Datagram from "../Datagram.js";
 import { Buffer } from "node:buffer";
-import { emTimestampToDate } from "../../util/util.js";
-import { EmEvseCurrentState } from "../../util/types.js";
+import { emTimestampToDate } from "util/util.js";
+import { type EmEvseCurrentState, EmEvseCurrentStates } from "util/types.js";
 
 export abstract class SingleACChargingStatus extends Datagram {
 
@@ -36,7 +36,7 @@ export abstract class SingleACChargingStatus extends Datagram {
 
         this.port = buffer.readUInt8(0);
         const currentState = buffer.length <= 74 || ![18, 19].includes(buffer.readUInt8(74)) ? buffer.readUInt8(1) : buffer.readUInt8(74);
-        this.currentState = EmEvseCurrentState[String(currentState)] || EmEvseCurrentState.UNKNOWN;
+        this.currentState = currentState as EmEvseCurrentState || EmEvseCurrentStates.UNKNOWN;
         this.chargeId = this.readString(buffer, 2, 16);
         this.startType = buffer.readUInt8(18);
         this.chargeType = buffer.readUInt8(19);

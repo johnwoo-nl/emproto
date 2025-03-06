@@ -1,10 +1,14 @@
 import {ChargeStartResponse} from "../dgrams/impl/ChargeStart.js";
-import {ChargeStartErrorReason, ChargeStartReservationResult} from "../util/types.js";
+import {
+    type ChargeStartErrorReason,
+    type ChargeStartReservationResult,
+    ChargeStartReservationResults
+} from "util/types.js";
 
-export const successReservationResults = [
-    ChargeStartReservationResult.IMMEDIATE_START,       // Not an error; no reservation was being made.
-    ChargeStartReservationResult.RESERVATION_OK,        // Reservation was successful.
-    ChargeStartReservationResult.RESERVATION_IN_PAST    // Not an error because the wallbox will just start charging immediately.
+export const successReservationResults: ChargeStartReservationResult[] = [
+    ChargeStartReservationResults.IMMEDIATE_START,       // Not an error; no reservation was being made.
+    ChargeStartReservationResults.RESERVATION_OK,        // Reservation was successful.
+    ChargeStartReservationResults.RESERVATION_IN_PAST    // Not an error because the wallbox will just start charging immediately.
 ];
 
 export class ChargeStartError extends Error {
@@ -13,7 +17,7 @@ export class ChargeStartError extends Error {
 
     constructor(response: ChargeStartResponse) {
         let message = `Charge start failed with error: ${response.getErrorReason()}`;
-        if (response.getReservationResult() !== ChargeStartReservationResult.IMMEDIATE_START) {
+        if (response.getReservationResult() !== ChargeStartReservationResults.IMMEDIATE_START) {
             message += `; reservation result: ${response.getReservationResult()}`;
         }
         super(message);

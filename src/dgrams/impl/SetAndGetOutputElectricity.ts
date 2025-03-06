@@ -1,18 +1,21 @@
 import Datagram from "../Datagram.js";
-import { SetAndGetOutputElectricityAction } from "../../util/types.js";
+import {
+    type SetAndGetOutputElectricityAction,
+    SetAndGetOutputElectricityActions
+} from "util/types.js";
 
 abstract class SetAndGetOutputElectricityAbstract extends Datagram {
     private action: SetAndGetOutputElectricityAction;    // u8
     private electricity: number; // u8
 
     protected packPayload(): Buffer {
-        if (this.action !== SetAndGetOutputElectricityAction.GET && this.action !== SetAndGetOutputElectricityAction.SET) {
+        if (this.action !== SetAndGetOutputElectricityActions.GET && this.action !== SetAndGetOutputElectricityActions.SET) {
             throw new Error("Invalid action, must be GET or SET");
         }
 
         const buffer = Buffer.of(this.action, 0x00);
 
-        if (this.action === SetAndGetOutputElectricityAction.SET) {
+        if (this.action === SetAndGetOutputElectricityActions.SET) {
             if (this.electricity < 6 || this.electricity > 32) {
                 // Note: also limited by the max supported rated current of the EVSE as returned in it's getInfo;
                 //       many support only up to 16A. This is just a global sanity check on the param value.
@@ -25,7 +28,7 @@ abstract class SetAndGetOutputElectricityAbstract extends Datagram {
     }
 
     protected unpackPayload(buffer: Buffer) {
-        this.action = SetAndGetOutputElectricityAction[String(buffer.readUInt8(0))] || SetAndGetOutputElectricityAction.UNKNOWN;
+        this.action = buffer.readUInt8(0) as SetAndGetOutputElectricityAction;
         this.electricity = buffer.readUInt8(1);
     }
 

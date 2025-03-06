@@ -83,12 +83,15 @@ function evseMatches(evse: EmEvse) {
 
     logInfo("Press Ctrl+C to exit");
 
-    communicator.addEventListener(["added", "removed", "changed"], async (evse, evt) => {
+    communicator.addEventListener(["ADDED", "REMOVED", "CHANGED"], async (evse, evt) => {
         if (evseKeyword && !evseMatches(evse)) return;
 
         process.stdout.write(`[${nowStr()}] ⚡ ${evt} ${evse.toString()}\n`);
-        if (evt === 'removed') return;
-        process.stdout.write(`    🔌 State: ${JSON.stringify(evse.getState())}\n`);
+        if (evt === 'REMOVED') return;
+        const state = evse.getState();
+        if (state) {
+            process.stdout.write(`    🔌 State: ${JSON.stringify(evse.getState())}\n`);
+        }
         const currentCharge = evse.getCurrentCharge();
         if (currentCharge) {
             process.stdout.write(`    🔋 Charge: ${JSON.stringify(currentCharge)}\n`);

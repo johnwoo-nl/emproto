@@ -1,5 +1,8 @@
 import Datagram from "../Datagram.js";
-import { ChargeStartErrorReason, ChargeStartReservationResult } from "../../util/types.js";
+import {
+    ChargeStartErrorReason,
+    ChargeStartReservationResult
+} from "util/types.js"
 import { dateToEmTimestamp } from "../../util/util.js";
 
 export class ChargeStart extends Datagram {
@@ -13,7 +16,7 @@ export class ChargeStart extends Datagram {
     private chargeType: number = 1;
     private maxDurationMinutes?: number;  // param 1
     private maxEnergyKWh?: number;        // param 2
-    private param3: number = 65535;
+    private readonly param3: number = 65535;
     private maxElectricity: number;
 
     protected unpackPayload(buffer: Buffer): void {

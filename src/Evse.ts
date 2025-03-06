@@ -11,32 +11,26 @@ import {
     type EmEvseConfig,
     EmEvseCurrentCharge,
     type EmEvseEvent,
-    EmEvseGunState,
+    EmEvseEvents,
+    EmEvseGunStates,
     type EmEvseInfo,
-    EmEvseMetaState,
-    EmEvseOutputState,
+    type EmEvseMetaState,
+    EmEvseMetaStates,
+    EmEvseOutputStates,
     type EmEvseState,
     isEmEvseInfo,
     type Language,
-    OffLineChargeAction,
+    OffLineChargeActions,
     OffLineChargeStatus,
     Phases,
-    SetAndGetLanguageAction,
-    SetAndGetNickNameAction,
-    SetAndGetOutputElectricityAction,
-    SetAndGetTemperatureUnitAction, SystemTimeAction,
+    SetAndGetLanguageActions,
+    SetAndGetNickNameActions,
+    SetAndGetOutputElectricityActions,
+    SetAndGetTemperatureUnitActions,
+    SystemTimeActions,
     TemperatureUnit
 } from "./util/types.js";
-import {
-    decodePassword,
-    encodePassword,
-    enumEquals,
-    logError,
-    logInfo,
-    logWarning,
-    toDate,
-    update
-} from "./util/util.js";
+import {decodePassword, encodePassword, logError, logInfo, logWarning, toDate, update} from "./util/util.js";
 import {LoginAbstract, LoginConfirm, LoginResponse, RequestLogin} from "./dgrams/impl/Login.js";
 import {SingleACStatus} from "./dgrams/impl/SingleACStatus.js";
 import {SetAndGetNickName, SetAndGetNickNameResponse} from "./dgrams/impl/SetAndGetNickName.js";
@@ -146,13 +140,13 @@ export default class Evse implements EmEvse {
     }
 
     public getMetaState(): EmEvseMetaState {
-        if (!this.isOnline()) return EmEvseMetaState.OFFLINE;
-        if (!this.isLoggedIn()) return EmEvseMetaState.NOT_LOGGED_IN;
-        if (!this.state) return EmEvseMetaState.IDLE;
-        if (this.state.errors?.length > 0) return EmEvseMetaState.ERROR;
-        if (enumEquals(this.state.outputState, EmEvseOutputState.CHARGING, EmEvseOutputState)) return EmEvseMetaState.CHARGING;
-        if (!enumEquals(this.state.gunState, EmEvseGunState.DISCONNECTED, EmEvseGunState)) return EmEvseMetaState.PLUGGED_IN;
-        return EmEvseMetaState.IDLE;
+        if (!this.isOnline()) return EmEvseMetaStates.OFFLINE;
+        if (!this.isLoggedIn()) return EmEvseMetaStates.NOT_LOGGED_IN;
+        if (!this.state) return EmEvseMetaStates.IDLE;
+        if (this.state.errors?.length > 0) return EmEvseMetaStates.ERROR;
+        if (this.state.outputState === EmEvseOutputStates.CHARGING) return EmEvseMetaStates.CHARGING;
+        if (this.state.gunState !== EmEvseGunStates.DISCONNECTED) return EmEvseMetaStates.PLUGGED_IN;
+        return EmEvseMetaStates.IDLE;
     }
 
     public getCurrentCharge(): EmEvseCurrentCharge | undefined {
@@ -482,13 +476,13 @@ export default class Evse implements EmEvse {
             const listener = (evse: Evse, event: EmEvseEvent, datagram?: Datagram) => {
                 if (datagram && evse.info.serial === this.info.serial && command.includes(datagram.getCommand())) {
                     clearTimeout(timeout);
-                    this.communicator.removeEventListener("datagram", listener);
+                    this.communicator.removeEventListener(EmEvseEvents.DATAGRAM, listener);
                     resolve(datagram);
                 }
             };
-            this.communicator.addEventListener("datagram", listener);
+            this.communicator.addEventListener(EmEvseEvents.DATAGRAM, listener);
             timeout = setTimeout(() => {
-                this.communicator.removeEventListener("datagram", listener);
+                this.communicator.removeEventListener(EmEvseEvents.DATAGRAM, listener);
                 reject(new Error(`Timeout (${timeoutMillis} ms) waiting for response with command ${command}`));
             }, timeoutMillis);
         });
@@ -511,7 +505,7 @@ export default class Evse implements EmEvse {
         // 3. If we get the LoginResponse then the password was correct, so set it on this instance.
         if (password !== undefined && this.password !== password) {
             this.password = password;
-            this.dispatchEvent("changed", response);
+            this.dispatchEvent(EmEvseEvents.CHANGED, response);
         }
         // 4. Send the LoginConfirm, completing the login flow. After this the EVSE can take commands.
         await this.sendDatagram(new LoginConfirm().setDevicePassword(password));
@@ -550,11 +544,11 @@ export default class Evse implements EmEvse {
             ]);
 
             // Send the datagrams. We don't wait for each one to be flushed to the network.
-            this.sendDatagram(new SetAndGetNickName().setAction(SetAndGetNickNameAction.GET)).then();
-            this.sendDatagram(new SetAndGetLanguage().setAction(SetAndGetLanguageAction.GET)).then();
-            this.sendDatagram(new SetAndGetOffLineCharge().setAction(OffLineChargeAction.GET)).then();
-            this.sendDatagram(new SetAndGetOutputElectricity().setAction(SetAndGetOutputElectricityAction.GET)).then();
-            this.sendDatagram(new SetAndGetTemperatureUnit().setAction(SetAndGetTemperatureUnitAction.GET)).then();
+            this.sendDatagram(new SetAndGetNickName().setAction(SetAndGetNickNameActions.GET)).then();
+            this.sendDatagram(new SetAndGetLanguage().setAction(SetAndGetLanguageActions.GET)).then();
+            this.sendDatagram(new SetAndGetOffLineCharge().setAction(OffLineChargeActions.GET)).then();
+            this.sendDatagram(new SetAndGetOutputElectricity().setAction(SetAndGetOutputElectricityActions.GET)).then();
+            this.sendDatagram(new SetAndGetTemperatureUnit().setAction(SetAndGetTemperatureUnitActions.GET)).then();
             this.sendDatagram(new GetVersion()).then();
             logInfo(`Fetching config for ${this.toString()}`);
         }
@@ -571,7 +565,7 @@ export default class Evse implements EmEvse {
         // only mark the time that configuration was last updated, so we can know later on if we need
         // to refresh.
         this.lastConfigUpdate = new Date();
-        this.dispatchEvent("changed");
+        this.dispatchEvent(EmEvseEvents.CHANGED);
         return this.config;
     }
 
@@ -585,7 +579,7 @@ export default class Evse implements EmEvse {
 
     public toString(): string {
         const model = [ this.info.brand, this.info.model ].filter(Boolean).join(" ");
-        return `[${this.info.serial}${model ? " " + model : ""} @ ${this.info.ip} ${EmEvseMetaState[this.getMetaState()]}]`;
+        return `[${this.info.serial}${model ? " " + model : ""} @ ${this.info.ip} ${EmEvseMetaStates[this.getMetaState()]}]`;
     }
 
     private updateOfflineCharging(datagram: SetAndGetOffLineChargeResponse) {
@@ -662,69 +656,69 @@ export default class Evse implements EmEvse {
         const wasLoggedIn = this.isLoggedIn();
         this.lastActiveLogin = undefined;
         if (wasLoggedIn && !this.isLoggedIn()) {
-            this.dispatchEvent("changed", datagram);
+            this.dispatchEvent(EmEvseEvents.CHANGED, datagram);
             return true;
         }
         return false;
     }
 
     public async setName(name: string): Promise<void> {
-        await this.sendDatagram(new SetAndGetNickName().setAction(SetAndGetNickNameAction.SET).setNickName("ACP#" + name));
+        await this.sendDatagram(new SetAndGetNickName().setAction(SetAndGetNickNameActions.SET).setNickName("ACP#" + name));
         const response = await this.waitForResponse(SetAndGetNickNameResponse.COMMAND, 5000) as SetAndGetNickNameResponse;
         if (response.getNickName() !== name) {
             throw new Error(`Failed to set name '${name}': EVSE reported back name '${response.getNickName()}'`);
         }
         this.config.name = name;
-        this.dispatchEvent("changed", response);
+        this.dispatchEvent(EmEvseEvents.CHANGED, response);
     }
 
     public async setOffLineCharge(status: OffLineChargeStatus): Promise<void> {
-        await this.sendDatagram(new SetAndGetOffLineCharge().setAction(OffLineChargeAction.SET).setStatus(status));
+        await this.sendDatagram(new SetAndGetOffLineCharge().setAction(OffLineChargeActions.SET).setStatus(status));
         const response = await this.waitForResponse(SetAndGetOffLineChargeResponse.COMMAND, 5000) as SetAndGetOffLineChargeResponse;
         if (response.getStatus() != status) {
             throw new Error(`Failed to set offlineCharge to ${status}: EVSE reported back status ${response.getStatus()}`);
         }
         this.config.offLineCharge = status;
-        this.dispatchEvent("changed", response);
+        this.dispatchEvent(EmEvseEvents.CHANGED, response);
     }
 
     public async setTemperatureUnit(unit: TemperatureUnit): Promise<void> {
-        await this.sendDatagram(new SetAndGetTemperatureUnit().setAction(SetAndGetTemperatureUnitAction.SET).setTemperatureUnit(unit));
+        await this.sendDatagram(new SetAndGetTemperatureUnit().setAction(SetAndGetTemperatureUnitActions.SET).setTemperatureUnit(unit));
         const response = await this.waitForResponse(SetAndGetTemperatureUnitResponse.COMMAND, 5000) as SetAndGetTemperatureUnitResponse;
         if (response.getTemperatureUnit() !== unit) {
             throw new Error(`Failed to set temperature unit to ${unit}: EVSE reported back unit ${response.getTemperatureUnit()}`);
         }
         this.config.temperatureUnit = unit;
-        this.dispatchEvent("changed", response);
+        this.dispatchEvent(EmEvseEvents.CHANGED, response);
     }
 
     public async setLanguage(language: Language): Promise<void> {
-        await this.sendDatagram(new SetAndGetLanguage().setAction(SetAndGetLanguageAction.SET).setLanguage(language));
+        await this.sendDatagram(new SetAndGetLanguage().setAction(SetAndGetLanguageActions.SET).setLanguage(language));
         const response = await this.waitForResponse(SetAndGetLanguageResponse.COMMAND, 5000) as SetAndGetLanguageResponse;
         if (response.getLanguage() !== language) {
             throw new Error(`Failed to set language to ${language}: EVSE reported back language ${response.getLanguage()}`);
         }
         this.config.language = language;
-        this.dispatchEvent("changed", response);
+        this.dispatchEvent(EmEvseEvents.CHANGED, response);
     }
 
     public async setMaxElectricity(amps: number): Promise<void> {
-        await this.sendDatagram(new SetAndGetOutputElectricity().setAction(SetAndGetOutputElectricityAction.SET).setElectricity(amps));
+        await this.sendDatagram(new SetAndGetOutputElectricity().setAction(SetAndGetOutputElectricityActions.SET).setElectricity(amps));
         const response = await this.waitForResponse(SetAndGetOutputElectricityResponse.COMMAND, 5000) as SetAndGetOutputElectricityResponse;
         if (response.getElectricity() !== amps) {
             throw new Error(`Failed to set output electricity to ${amps}: EVSE reported back ${response.getElectricity()}`);
         }
-        this.dispatchEvent("changed", response);
+        this.dispatchEvent(EmEvseEvents.CHANGED, response);
     }
 
     public async fetchSystemTime(): Promise<Date> {
-        await this.sendDatagram(new SetAndGetSystemTime().setAction(SystemTimeAction.GET));
+        await this.sendDatagram(new SetAndGetSystemTime().setAction(SystemTimeActions.GET));
         const response = await this.waitForResponse(SetAndGetSystemTimeResponse.COMMAND, 5000) as SetAndGetSystemTimeResponse;
         return response.getTime();
     }
 
     public async setSystemTime(time?: Date): Promise<void> {
-        const datagram = new SetAndGetSystemTime().setAction(SystemTimeAction.SET);
+        const datagram = new SetAndGetSystemTime().setAction(SystemTimeActions.SET);
         if (time) datagram.setTime(time);
         await this.sendDatagram(datagram);
         const response = await this.waitForResponse(SetAndGetSystemTimeResponse.COMMAND, 5000) as SetAndGetSystemTimeResponse;

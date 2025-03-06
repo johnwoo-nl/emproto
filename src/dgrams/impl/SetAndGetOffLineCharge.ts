@@ -1,21 +1,24 @@
 import Datagram from "../Datagram.js";
-import { OffLineChargeAction, type OffLineChargeStatus, OffLineChargeStatusMapping } from "../../util/types.js";
-import { enumStr } from "../../util/util.js";
+import {
+    type OffLineChargeAction,
+    OffLineChargeActions,
+    type OffLineChargeStatus
+} from "util/types.js";
 
 abstract class SetAndGetOffLineChargeAbstract extends Datagram {
-    private status: OffLineChargeStatusMapping;
+    private status: OffLineChargeStatus;
     private action: OffLineChargeAction;
 
     protected packPayload() {
-        return Buffer.of(this.action, this.action === OffLineChargeAction.GET ? 0 : this.status);
+        return Buffer.of(this.action, this.action === OffLineChargeActions.GET ? 0 : this.status);
     }
 
     protected unpackPayload(buffer: Buffer) {
         if (buffer.length < 2) {
             throw new Error("269/SetAndGetOffLineChargeResponse payload too small");
         }
-        this.action = OffLineChargeAction[String(buffer.readUInt8(0))] || OffLineChargeAction.UNKNOWN;
-        this.status = OffLineChargeStatusMapping[String(buffer.readUInt8(1))] || OffLineChargeStatusMapping.UNKNOWN;
+        this.action = buffer.readUInt8(0) as OffLineChargeAction;
+        this.status = buffer.readUInt8(1) as OffLineChargeStatus;
     }
 
     public getAction(): OffLineChargeAction {
@@ -28,11 +31,11 @@ abstract class SetAndGetOffLineChargeAbstract extends Datagram {
     }
 
     public getStatus(): OffLineChargeStatus {
-        return enumStr(this.status, OffLineChargeStatusMapping) as OffLineChargeStatus;
+        return this.status;
     }
 
     public setStatus(status: OffLineChargeStatus): this {
-        this.status = OffLineChargeStatusMapping[status];
+        this.status = status;
         return this;
     }
 }
