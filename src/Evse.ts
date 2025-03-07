@@ -563,9 +563,10 @@ export default class Evse implements EmEvse {
 
         // If we get here then all configuration was received (and EVSE changed events were sent). We
         // only mark the time that configuration was last updated, so we can know later on if we need
-        // to refresh.
+        // to refresh. Note: we don't send out any CHANGED event here, because the incoming response
+        // datagrams will already have gone through the update() method, and sent out events if there
+        // actually were changes in config.
         this.lastConfigUpdate = new Date();
-        this.dispatchEvent(EmEvseEvents.CHANGED);
         return this.config;
     }
 

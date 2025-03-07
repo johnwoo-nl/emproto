@@ -29,7 +29,7 @@ export class Communicator implements EmCommunicator {
 
     private socket: Socket|null = null;
 
-    private checkSessionTimeoutsInterval: NodeJS.Timeout|null = null;
+    private periodicChecksInterval: NodeJS.Timeout|null = null;
 
     private readonly evses: Evse[] = [];
 
@@ -48,8 +48,8 @@ export class Communicator implements EmCommunicator {
             this.socket = createSocket({type: 'udp4', reuseAddr: true});
             let starting = true;
 
-            if (this.checkSessionTimeoutsInterval) clearInterval(this.checkSessionTimeoutsInterval);
-            this.checkSessionTimeoutsInterval = setInterval(this.checkSessionTimeouts.bind(this), 5000);
+            if (this.periodicChecksInterval) clearInterval(this.periodicChecksInterval);
+            this.periodicChecksInterval = setInterval(this.periodicChecks.bind(this), 5000);
 
             this.socket.on("error", (err) => {
                 logError(`Socket error: ${err.message}\n${err.stack}`)
@@ -128,9 +128,9 @@ export class Communicator implements EmCommunicator {
 
     public stop() {
         logInfo("Stopping...");
-        if (this.checkSessionTimeoutsInterval) {
-            clearInterval(this.checkSessionTimeoutsInterval);
-            this.checkSessionTimeoutsInterval = null;
+        if (this.periodicChecksInterval) {
+            clearInterval(this.periodicChecksInterval);
+            this.periodicChecksInterval = null;
         }
         if (this.socket) {
             this.socket.close();
@@ -168,7 +168,7 @@ export class Communicator implements EmCommunicator {
             }
         }
         if (loadedEvses.length > 0) {
-            this.checkSessionTimeouts();
+            this.periodicChecks();
         }
         return loadedEvses;
     }
@@ -387,14 +387,23 @@ export class Communicator implements EmCommunicator {
         });
     }
 
-    private checkSessionTimeouts() {
+    private periodicChecks() {
         if (!this.isRunning()) return;
         this.evses.forEach(evse => {
+            // Check online state.
             if (evse.updateOnlineStatus()) {
                 this.dispatchEvent(EmEvseEvents.CHANGED, evse);
             }
+            // Automatic re-login if session was lost.
             if (!evse.isLoggedIn() && evse.hasPassword()) {
                 evse.login().then();
+            }
+            // Automatic refresh of config.
+            if (this.config.refreshConfigIntervalSeconds > 5 && evse.isLoggedIn()) {
+                const lastConfigUpdate = evse.getLastConfigUpdate()?.getTime();
+                if (!lastConfigUpdate || lastConfigUpdate < Date.now() - this.config.refreshConfigIntervalSeconds * 1000) {
+                    evse.fetchConfig().then();
+                }
             }
         });
     }

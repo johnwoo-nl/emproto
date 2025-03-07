@@ -299,12 +299,26 @@ export type EmCommunicatorConfig = {
      * (better readable) normalized datagram object parsed from the packet is also dumped.
      */
     dumpDatagrams: boolean;
+
+    /**
+     * How often to get the latest configuration from the EVSE, in seconds.
+     * Minimum interval is 5 seconds; default is 120 seconds.
+     * This is to detect changes in configuration done out-of-band, by other apps (like the OEM app).
+     * The periodic refresh is only done when the EVSE is online and the library is logged in.
+     * Set to undefined or a numeric value smaller than 5 seconds to disable automatic refresh.
+     * Configuration is fetched:
+     * - automatically after any successful login;
+     * - periodically automatically if the last time it was fetched is longer ago than this interval;
+     * - manually if app calls fetchConfig.
+     */
+    refreshConfigIntervalSeconds?: number;
 }
 
 export const DEFAULT_EM_COMMUNICATOR_CONFIG: EmCommunicatorConfig = {
     port: 28376,
     offlineAfterLastDatagram: 11,
-    dumpDatagrams: false
+    dumpDatagrams: false,
+    refreshConfigIntervalSeconds: 120
 };
 
 export interface EmDatagram {
