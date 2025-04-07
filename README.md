@@ -19,6 +19,12 @@ broadcast datagrams from the charger are routed to the library.
 While the OEM app insists on reconnecting via bluetooth regularly, that seems to be an app issue; the charger does in fact remain fully
 functional on the network once the Wi-Fi connection is correctly configured.
 
+## Requirements
+
+- Nodejs 20.14.10 or newer.
+- Build toolchain or runtime supporting ES6 modules.
+- Typescript to build (`tsc`), for now. Once an npm package will be created with prebuilt JS, JS will also suffice on the app side.
+
 ## Installation
 
 There is no npm package yet; for now, you can use the protocol handler library by cloning the repository and adding a filesystem dependency.
@@ -35,6 +41,8 @@ npm install && npm run build
 cd ../my-project
 npm install ../emproto
 ```
+
+## Hello, world!
 
 Example of a basic app using the library with only a single file, `index.js` (that would go directly in your `my-project` directory as referenced in the above installation):
 
@@ -68,12 +76,6 @@ node index.js
 Use Ctrl+C to exit your app.
 This example app doesn't log in to any chargers so it'll show only basic info (no state info), unless another app has saved the password to `~/evses.json`.
 Read on to see how to login and get more info from a charger, and how to control it.
-
-## Requirements
-
-- Nodejs 20.14.10 or newer.
-- Build toolchain or runtime supporting ES6 modules.
-- Typescript to build (`tsc`), for now. Once an npm package will be created with prebuilt JS, JS will also suffice on the app side.
 
 ## Library usage
 

@@ -326,7 +326,6 @@ export default class Evse implements EmEvse {
         return changed;
     }
 
-
     /**
      * Serialize this EmEvse to a plain object.
      * @returns Plain object representing this EmEvse.
