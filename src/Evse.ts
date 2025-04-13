@@ -733,7 +733,7 @@ export default class Evse implements EmEvse {
         if (!maxAmps) {
             throw new Error("No maxAmps value specified for chargeStart, and none available from configuration.");
         } else {
-            const evseMaxAmps = this.getInfo().maxElectricity || 32;
+            const evseMaxAmps = this.getInfo().maxElectricity || 16;
             if (maxAmps < 6 || maxAmps > evseMaxAmps) {
                 throw new Error(`Invalid maxAmps value ${maxAmps} specified for chargeStart; valid range is 6-${evseMaxAmps}A`);
             }
