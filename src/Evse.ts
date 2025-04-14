@@ -739,14 +739,17 @@ export default class Evse implements EmEvse {
             }
         }
 
+        const singlePhase = params.singlePhase || this.info.phases !== Phases.THREE_PHASE;
+
         const chargeStart = new ChargeStart()
-            .setLineId(params.singlePhase || this.info.phases !== Phases.THREE_PHASE ? 1 : 2)
+            .setLineId(singlePhase ? 1 : 2)
+            .setChargeType(singlePhase ? 11 : 1)
+            .setMaxElectricity(maxAmps)
             .setUserId(params.userId)
             .setChargeId(params.chargeId)
             .setReservationDate(params.startAt)
             .setMaxDurationMinutes(params.maxDurationMinutes)
-            .setMaxEnergyKWh(params.maxEnergyKWh)
-            .setMaxElectricity(maxAmps);
+            .setMaxEnergyKWh(params.maxEnergyKWh);
         await this.sendDatagram(chargeStart);
         const response = await this.waitForResponse(ChargeStartResponse.COMMAND, 5000) as ChargeStartResponse;
 
