@@ -9,6 +9,7 @@ export abstract class LoginAbstract extends Datagram {
     private maxPower: number; // u32
     private maxElectricity: number; // u8
     private hotLine: string; // String
+    private p51: number; // u8
 
     protected packPayload() {
         return Buffer.of();
@@ -30,6 +31,11 @@ export abstract class LoginAbstract extends Datagram {
         if (buffer.length === 151) {
             this.brand += this.readString(buffer, 119, 16);
             this.model += this.readString(buffer, 135, 16);
+        }
+        if (buffer.length >= 71 && this.type === 25 || this.type === 9 || this.type === 10) {
+            this.p51 = buffer.readUInt8(70);
+        } else {
+            this.p51 = 0;
         }
     }
 
@@ -59,6 +65,10 @@ export abstract class LoginAbstract extends Datagram {
 
     public getHotLine(): string {
         return this.hotLine;
+    }
+
+    public getP51(): number {
+        return this.p51;
     }
 }
 

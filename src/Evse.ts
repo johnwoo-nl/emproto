@@ -269,9 +269,25 @@ export default class Evse implements EmEvse {
             changed = true;
         }
 
-        const phases = [10, 11, 12, 13, 14, 15, 22, 23, 24, 25].includes(login.getType()) ? Phases.THREE_PHASE : Phases.SINGLE_PHASE;
+        if (this.info.type !== login.getType()) {
+            this.info.type = login.getType();
+            changed = true;
+        }
+
+        const phases = [10, 11, 12, 13, 14, 15, 22, 23, 24, 25].includes(this.info.type) ? Phases.THREE_PHASE : Phases.SINGLE_PHASE;
         if (this.info.phases !== phases) {
             this.info.phases = phases;
+            changed = true;
+        }
+
+        if (this.info.p51 !== login.getP51()) {
+            this.info.p51 = login.getP51();
+            changed = true;
+        }
+
+        const canForceSinglePhase = !([22, 23, 24, 25].includes(this.info.type) && this.info.p51 >= 11);
+        if (this.info.canForceSinglePhase !== canForceSinglePhase) {
+            this.info.canForceSinglePhase = canForceSinglePhase;
             changed = true;
         }
 

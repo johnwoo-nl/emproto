@@ -254,6 +254,9 @@ export type ChargeStartParams = {
     /**
      * Whether to limit charging to single phase. If omitted or false, the EVSE will charge with 3 phases if available.
      * This is only relevant for 3-phase EVSEs; you don't have to set it to true to charge single-phase EVSEs.
+     * This feature of limiting 3-phase EVSEs to single phase is only available on some EVSEs - namely only those
+     * that have info.canForceSinglePhase set to true (you can inspect this value before offering some option to a
+     * user to limit to single phase).
      */
     singlePhase?: boolean;
 };
@@ -428,13 +431,23 @@ export type EmEvseInfo = {
     hardwareVersion?: string;
     softwareVersion?: string;
     hotLine?: string;
+    // Type reported by the EVSE. This is some number on which certain features are dependent.
+    type?: number;
+    // This is a field reported by the EVSE on which some features are dependent.
+    p51?: number;
+    // The number of phases the EVSE can use (1 or 3).
     phases?: Phases;
+    // Whether the EVSE can limit a charge to using a single phase even if it has 3 phases.
+    // This is required for the ChargeStartParams.singlePhase parameter to work.
+    canForceSinglePhase?: boolean;
     // The physical maximum power (in watts) the EVSE can deliver. This is maxElectricity times phase voltage
     // times the number of phases.
     maxPower?: number;
     // The physical maximum electricity (in amps) the EVSE can deliver.
     maxElectricity?: number;
+    // Feature flags reported by the EVSE.
     feature?: number;
+    // This seems to be some additional feature flags.
     supportNew?: number;
 };
 
