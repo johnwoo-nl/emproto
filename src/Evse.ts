@@ -474,6 +474,21 @@ export default class Evse implements EmEvse {
             changed = true;
         }
 
+        if (other.info.type !== undefined && other.info.type !== this.info.type) {
+            this.info.type = other.info.type;
+            changed = true;
+        }
+
+        if (other.info.p51 !== undefined && other.info.p51 !== this.info.p51) {
+            this.info.p51 = other.info.p51;
+            changed = true;
+        }
+
+        if (other.info.canForceSinglePhase !== undefined && other.info.canForceSinglePhase !== this.info.canForceSinglePhase) {
+            this.info.canForceSinglePhase = other.info.canForceSinglePhase;
+            changed = true;
+        }
+
         if (other.config.name && (!this.config.name || other.config.name !== this.config.name)) {
             this.config.name = other.config.name;
             changed = true;
