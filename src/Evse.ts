@@ -285,7 +285,7 @@ export default class Evse implements EmEvse {
             changed = true;
         }
 
-        const canForceSinglePhase = !([22, 23, 24, 25].includes(this.info.type) && this.info.p51 >= 11);
+        const canForceSinglePhase = [22, 23, 24, 25].includes(this.info.type) && this.info.p51 < 11;
         if (this.info.canForceSinglePhase !== canForceSinglePhase) {
             this.info.canForceSinglePhase = canForceSinglePhase;
             changed = true;
